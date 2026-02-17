@@ -1,0 +1,74 @@
+.parent {
+  height: calc(100vh - 10.5rem);
+  overflow: auto;
+  position: relative;
+}
+
+.columnContainer {
+  top: 0;
+  display: flex;
+  background: #3c6e54;
+  z-index: 3;
+  width: max-content;
+  position: sticky;
+}
+
+.wrapper {
+  display: flex;
+  width: max-content;
+}
+
+.rowContainer {
+  position: sticky;
+  left: 0;
+  background: #3c6e54;
+  z-index: 2;
+}
+
+/* Corner */
+.dummyContainer {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  width: 10rem;
+  height: 3rem;
+  background: #183024;
+  border: 1px solid #ccc;
+}
+
+.gridRow {
+  display: flex;
+}
+
+.cell {
+  width: 10rem;
+  height: 3rem;
+  border: 1px solid #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.dataCell {
+  width: 10rem;
+  height: 3rem;
+  border: 1px solid #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgb(0, 0, 0);
+}
+
+.cellInput {
+  width: 100% !important;
+  height: 100%;
+  border: none;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.dataCell :focus {
+  outline: 2px solid green;
+  outline-offset: -2px; /* keeps it inside cell */
+}

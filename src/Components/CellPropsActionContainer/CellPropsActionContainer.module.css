@@ -1,0 +1,23 @@
+.parent {
+  background-color: #ecf0f1;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  color: rgb(50, 50, 50);
+}
+.action {
+  padding: 5px;
+}
+.action:hover {
+  background-color: rgb(199, 199, 199);
+  border-radius: 25%;
+}
+
+.actionActive {
+  padding: 5px;
+  background-color: rgb(199, 199, 199);
+  border-radius: 25%;
+}

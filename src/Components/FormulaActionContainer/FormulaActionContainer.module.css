@@ -1,0 +1,8 @@
+.parent {
+  background-color: #add7e2;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  gap: 0.5rem;
+}

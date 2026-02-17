@@ -1,0 +1,17 @@
+.parent {
+  background-color: #218c73;
+  min-height: 3rem;
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding-left: 0.5rem;
+}
+.pageAction {
+  padding: 0.5rem;
+  color: aliceblue;
+}
+.pageActionActive {
+  color: rgb(0, 0, 0);
+  background-color: #ecf0f1;
+  border-radius: 5px 5px 0% 0%;
+}

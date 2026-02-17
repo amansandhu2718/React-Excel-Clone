@@ -1,0 +1,18 @@
+.parent {
+  background-color: #ebeff1;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 1rem;
+  color: #383838;
+}
+
+.sheet {
+  color: #383838;
+}
+.sheetActive {
+  color: #000000;
+  font-weight: bolder;
+  text-decoration: underline;
+}
