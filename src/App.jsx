@@ -4,6 +4,7 @@ import CellPropsActionContainer from "./Components/CellPropsActionContainer/Cell
 import FormulaActionContainer from "./Components/FormulaActionContainer/FormulaActionContainer";
 import GridContainer from "./Components/GridContainer/GridContainer";
 import SheetContainer from "./Components/SheetContainer/SheetContainer";
+import VirtualGridContainer from "./Components/VirtualizedGrid/VirtualizedGrid";
 
 function App() {
   return (
@@ -11,7 +12,10 @@ function App() {
       <PageActionContainer></PageActionContainer>
       <CellPropsActionContainer></CellPropsActionContainer>
       <FormulaActionContainer></FormulaActionContainer>
-      <GridContainer></GridContainer>
+      {/* <GridContainer></GridContainer> */}
+      <div style={{ height: "calc(100vh - 10.5rem)" }}>
+        <VirtualGridContainer />
+      </div>
       <SheetContainer></SheetContainer>
     </>
   );

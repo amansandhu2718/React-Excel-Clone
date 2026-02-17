@@ -4,6 +4,7 @@ import { addValue, updateSelected } from "./../REDUX/Features/CellsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import React from "react";
 import { encodeColumn } from "../../utils/columnUtils";
+
 function GridContainer() {
   const rows = 25;
   const cols = 125;

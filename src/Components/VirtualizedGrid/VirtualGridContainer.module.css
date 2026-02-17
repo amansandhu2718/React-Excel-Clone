@@ -1,0 +1,134 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%; /* parent must have a height (e.g. in App.jsx) */
+  box-sizing: border-box;
+}
+
+/* Top: corner + column headers */
+.headerRow {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.corner {
+  width: 60px;
+  height: 32px;
+  box-sizing: border-box;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  background-color: #183024;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.columnHeaderViewport {
+  position: relative;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border-bottom: 1px solid #ccc;
+}
+
+.columnHeaderInner {
+  position: relative;
+  height: 32px;
+}
+
+.columnHeaderCell {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  border-right: 1px solid #ccc;
+  background-color: #3c6e54;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+/* Bottom: row headers + data grid */
+.bodyRow {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rowHeaderViewport {
+  position: relative;
+  flex: 0 0 60px;
+  overflow: hidden;
+  border-right: 1px solid #ccc;
+}
+
+.rowHeaderInner {
+  position: relative;
+  width: 100%;
+}
+
+.rowHeaderCell {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  border-bottom: 1px solid #ccc;
+  background-color: #3c6e54;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+/* Scrollable data grid */
+.viewport {
+  flex: 1 1 auto;
+  overflow: auto;
+  position: relative;
+  background-color: #ffffff;
+}
+
+.inner {
+  position: relative;
+}
+
+/* Wrapper around your <Cell> */
+.cellWrapper {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* Input from your existing styles; you can also reuse GridContainer.module.css */
+.dataCell {
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.corner {
+  flex: 0 0 60px; /* lock width in flex row */
+  width: 60px; /* same as rowHeaderViewport flex-basis */
+  height: 32px; /* same as ROW_HEIGHT and column header height */
+  box-sizing: border-box;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  background-color: #183024;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rowHeaderViewport {
+  flex: 0 0 60px; /* same as .corner width */
+}
+
+.columnHeaderInner {
+  height: 32px; /* same as .corner height */
+}
