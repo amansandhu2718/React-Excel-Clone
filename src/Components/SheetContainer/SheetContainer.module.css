@@ -1,19 +1,58 @@
 .parent {
-  background-color: #ebeff1;
-  min-height: 3rem;
+  background-color: #f8f9fa;
+  min-height: 2.5rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0;
   padding-left: 1rem;
   color: #383838;
-  flex-wrap: wrap;
+  border-top: 1px solid #ddd;
+  background: white;
 }
 
 .sheet {
-  color: #383838;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-right: 1px solid #eee;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  user-select: none;
 }
+
+.sheet:hover {
+  background-color: #f1f3f4;
+}
+
 .sheetActive {
-  color: #000000;
-  font-weight: bolder;
-  text-decoration: underline;
+  background-color: #fff;
+  color: #188038;
+  font-weight: 600;
+  border-bottom: 3px solid #188038;
+}
+
+.addButton {
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  transition: color 0.2s;
+}
+
+.addButton:hover {
+  color: #188038;
+  background-color: #f1f3f4;
+}
+
+.renameInput {
+  border: 1px solid #188038;
+  outline: none;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  width: 80px;
+  border-radius: 2px;
 }

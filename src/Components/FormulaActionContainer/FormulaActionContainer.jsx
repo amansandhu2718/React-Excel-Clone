@@ -7,8 +7,10 @@ import { applyFormula } from "../REDUX/Features/CellsSlice";
 
 function FormulaActionContainer() {
   const dispatch = useDispatch();
-  const selectedCellId = useSelector((state) => state.sheet?.selectedCell || "");
-  const formulaFromState = useSelector((state) => state.sheet?.cells?.[selectedCellId]?.formula || "");
+  const activeSheetId = useSelector((state) => state.sheet?.activeSheetId);
+  const activeSheet = useSelector((state) => state.sheet?.sheets?.[activeSheetId]);
+  const selectedCellId = activeSheet?.selectedCell || "";
+  const formulaFromState = activeSheet?.cells?.[selectedCellId]?.formula || "";
 
   const [formulaValue, setFormulaValue] = useState("");
 

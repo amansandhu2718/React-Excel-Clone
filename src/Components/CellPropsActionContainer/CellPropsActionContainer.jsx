@@ -30,12 +30,10 @@ function CellPropsActionContainer() {
   const dispatch = useDispatch();
   // Use two selectors (no new object returned) to avoid:
   // "Selector unknown returned a different result when called with the same parameters"
-  const selectedCellId = useSelector(
-    (state) => state.sheet?.selectedCell || "",
-  );
-  let selectedCell = useSelector((state) =>
-    selectedCellId ? (state.sheet?.cells?.[selectedCellId] ?? null) : null,
-  );
+  const activeSheetId = useSelector((state) => state.sheet?.activeSheetId);
+  const activeSheet = useSelector((state) => state.sheet?.sheets?.[activeSheetId]);
+  const selectedCellId = activeSheet?.selectedCell || "";
+  let selectedCell = activeSheet?.cells?.[selectedCellId] || null;
 
   if (selectedCell == null) {
     selectedCell = {

@@ -6,6 +6,41 @@
   flex-wrap: wrap;
   padding-left: 0.5rem;
 }
+
+.workbookNameDisplay {
+  padding: 0.2rem 1rem;
+  margin-left: 0.5rem;
+  margin-right: 2rem;
+  margin-bottom: 0.5rem;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.workbookNameDisplay:hover {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.workbookNameInput {
+  margin-left: 0.5rem;
+  margin-right: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 0.2rem 1rem;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  outline: none;
+  background-color: white;
+  color: #218c73;
+  width: auto;
+  min-width: 150px;
+}
 .pageAction {
   padding: 0.5rem;
   color: aliceblue;
@@ -14,4 +49,16 @@
   color: rgb(0, 0, 0);
   background-color: #ecf0f1;
   border-radius: 5px 5px 0% 0%;
+}
+.spinningIcon {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

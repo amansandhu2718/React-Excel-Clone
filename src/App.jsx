@@ -18,11 +18,15 @@ import SheetContainer from "./Components/SheetContainer/SheetContainer";
 import VirtualGridContainer from "./Components/VirtualizedGrid/VirtualizedGrid";
 import SignInPage from "./Components/SignInPage/SignInPage";
 import { CircularProgress, Box } from "@mui/material";
+import { usePersistence } from "./hooks/usePersistence";
 import img from "./Components/SignInPage/login.svg";
 
 function App() {
   const dispatch = useDispatch();
   const { user, loading } = useSelector((state) => state.auth);
+
+  // Enable auto-saving of spreadsheet state to local storage
+  usePersistence();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {

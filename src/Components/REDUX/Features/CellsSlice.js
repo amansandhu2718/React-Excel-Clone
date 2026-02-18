@@ -1,28 +1,52 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { parseCellId, decodeColumn, encodeColumn } from "./../../../utils/columnUtils";
 
-const initialState = {
-  selectedCell: "",
-  selectionRange: { start: null, end: null },
-  isSelecting: false,
-  cells: {
-    A1: {
-      value: "10",
-      isBold: false,
-      isItalic: false,
-      align: "left",
-      fontColor: "#000000",
-      bgColor: "#ffffff",
+const loadState = () => {
+  try {
+    const serializedState = localStorage.getItem("excel_clone_state");
+    if (serializedState === null) return undefined;
+    return JSON.parse(serializedState);
+  } catch (err) {
+    return undefined;
+  }
+};
+
+const persistedState = loadState();
+
+const initialState = persistedState 
+? { ...persistedState, activeSheetId: persistedState.sheetOrder[0] || "sheet1" }
+: {
+  workbookName: "Untitled Spreadsheet",
+  activeSheetId: "sheet1",
+  sheets: {
+    sheet1: {
+      id: "sheet1",
+      name: "Sheet 1",
+      cells: {
+        A1: {
+          value: "10",
+          isBold: false,
+          isItalic: false,
+          align: "left",
+          fontColor: "#000000",
+          bgColor: "#ffffff",
+        },
+      },
+      selectedCell: "A1",
+      selectionRange: { start: "A1", end: "A1" },
     },
   },
+  sheetOrder: ["sheet1"],
+  isSelecting: false,
 };
 
 // Internal helper for range formatting
 const applyToRange = (state, callback) => {
-  const { start, end } = state.selectionRange;
+  const activeSheet = state.sheets[state.activeSheetId];
+  const { start, end } = activeSheet.selectionRange;
   if (!start) {
-    if (state.selectedCell) {
-      callback(state.selectedCell);
+    if (activeSheet.selectedCell) {
+      callback(activeSheet.selectedCell, activeSheet);
     }
     return;
   }
@@ -45,7 +69,7 @@ const applyToRange = (state, callback) => {
   for (let r = minRow; r <= maxRow; r++) {
     for (let c = minCol; c <= maxCol; c++) {
       const id = `${encodeColumn(c)}${r}`;
-      callback(id);
+      callback(id, activeSheet);
     }
   }
 };
@@ -58,138 +82,183 @@ export const cellsSlice = createSlice({
       const { id, value } = action.payload;
       if (id == null) return;
 
-      const cell = state.cells[id] || {};
+      const activeSheet = state.sheets[state.activeSheetId];
+      const cell = activeSheet.cells[id] || {};
       
       // If cell had a formula, remove it and detach from parents
       if (cell.formula) {
-        removeFormula(state, id);
+        removeFormula(activeSheet, id);
       }
 
-      state.cells[id] = { ...cell, value, formula: "" };
-      updateChildren(state, id);
+      activeSheet.cells[id] = { ...cell, value, formula: "" };
+      updateChildren(activeSheet, id);
     },
     applyFormula: (state, action) => {
       const { id, formula } = action.payload;
       if (!id) return;
 
-      const cell = state.cells[id] || {};
+      const activeSheet = state.sheets[state.activeSheetId];
+      const cell = activeSheet.cells[id] || {};
 
       // 1. Remove old formula/dependencies if any
       if (cell.formula) {
-        removeFormula(state, id);
+        removeFormula(activeSheet, id);
       }
 
       // 2. Add new formula and dependencies
       const parents = extractParents(formula);
       
       // Perform cycle detection using DFS
-      if (isCyclePresent(state, id, parents)) {
+      if (isCyclePresent(activeSheet, id, parents)) {
         alert("Cycle detected! Formula cannot be applied.");
         return;
       }
 
-      state.cells[id] = { ...cell, formula, parent: parents };
+      activeSheet.cells[id] = { ...cell, formula, parent: parents };
 
       parents.forEach(parentId => {
-        if (!state.cells[parentId]) {
-          state.cells[parentId] = { value: "0", children: [] };
+        if (!activeSheet.cells[parentId]) {
+          activeSheet.cells[parentId] = { value: "0", children: [] };
         }
-        if (!state.cells[parentId].children) {
-          state.cells[parentId].children = [];
+        if (!activeSheet.cells[parentId].children) {
+          activeSheet.cells[parentId].children = [];
         }
-        if (!state.cells[parentId].children.includes(id)) {
-          state.cells[parentId].children.push(id);
+        if (!activeSheet.cells[parentId].children.includes(id)) {
+          activeSheet.cells[parentId].children.push(id);
         }
       });
 
       // 3. Evaluate and update children
-      const newValue = evaluateFormula(formula, state.cells);
-      state.cells[id].value = newValue;
+      const newValue = evaluateFormula(formula, activeSheet.cells);
+      activeSheet.cells[id].value = newValue;
       
-      updateChildren(state, id);
+      updateChildren(activeSheet, id);
     },
     updateSelected: (state, action) => {
-      state.selectedCell = action.payload.id;
-      state.selectionRange = { start: action.payload.id, end: action.payload.id };
+      const activeSheet = state.sheets[state.activeSheetId];
+      activeSheet.selectedCell = action.payload.id;
+      activeSheet.selectionRange = { start: action.payload.id, end: action.payload.id };
     },
     selectStart: (state, action) => {
-      state.selectedCell = action.payload.id;
-      state.selectionRange = { start: action.payload.id, end: action.payload.id };
+      const activeSheet = state.sheets[state.activeSheetId];
+      activeSheet.selectedCell = action.payload.id;
+      activeSheet.selectionRange = { start: action.payload.id, end: action.payload.id };
       state.isSelecting = true;
     },
     selectEnd: (state, action) => {
       if (state.isSelecting) {
-        state.selectionRange.end = action.payload.id;
+        const activeSheet = state.sheets[state.activeSheetId];
+        activeSheet.selectionRange.end = action.payload.id;
       }
     },
     setIsSelecting: (state, action) => {
       state.isSelecting = action.payload;
     },
     toggleBold: (state) => {
-      const targetId = state.selectedCell;
+      const activeSheet = state.sheets[state.activeSheetId];
+      const targetId = activeSheet.selectedCell;
       if (!targetId) return;
       
-      const shouldBeBold = !state.cells[targetId]?.isBold;
+      const shouldBeBold = !activeSheet.cells[targetId]?.isBold;
       
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].isBold = shouldBeBold;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].isBold = shouldBeBold;
       });
     },
     toggleItalic: (state) => {
-      const targetId = state.selectedCell;
+      const activeSheet = state.sheets[state.activeSheetId];
+      const targetId = activeSheet.selectedCell;
       if (!targetId) return;
 
-      const shouldBeItalic = !state.cells[targetId]?.isItalic;
+      const shouldBeItalic = !activeSheet.cells[targetId]?.isItalic;
 
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].isItalic = shouldBeItalic;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].isItalic = shouldBeItalic;
       });
     },
     switchAlignment: (state, action) => {
       const { val } = action.payload;
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].align = val;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].align = val;
       });
     },
     setFontFamily: (state, action) => {
       const { fontFamily } = action.payload;
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].fontFamily = fontFamily;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].fontFamily = fontFamily;
       });
     },
     setFontSize: (state, action) => {
       const { fontSize } = action.payload;
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].fontSize = fontSize;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].fontSize = fontSize;
       });
     },
     changeFontColor: (state, action) => {
       const { fontColor } = action.payload;
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].fontColor = fontColor;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].fontColor = fontColor;
       });
     },
     changeBgColor: (state, action) => {
       const { bgColor } = action.payload;
-      applyToRange(state, (id) => {
-        if (!state.cells[id]) state.cells[id] = {};
-        state.cells[id].bgColor = bgColor;
+      applyToRange(state, (id, sheet) => {
+        if (!sheet.cells[id]) sheet.cells[id] = {};
+        sheet.cells[id].bgColor = bgColor;
       });
     },
     clearFormatting: (state) => {
-      applyToRange(state, (id) => {
-        if (state.cells[id]) {
-          const { value, formula, parent, children } = state.cells[id];
+      applyToRange(state, (id, sheet) => {
+        if (sheet.cells[id]) {
+          const { value, formula, parent, children } = sheet.cells[id];
           // Keep data but reset styles
-          state.cells[id] = { value, formula, parent, children };
+          sheet.cells[id] = { value, formula, parent, children };
         }
       });
+    },
+    // Multiple Sheets Management
+    setWorkbookName: (state, action) => {
+      state.workbookName = action.payload;
+    },
+    setActiveSheet: (state, action) => {
+      state.activeSheetId = action.payload;
+    },
+    addSheet: (state) => {
+      const newId = `sheet${Date.now()}`;
+      const newName = `Sheet ${state.sheetOrder.length + 1}`;
+      state.sheets[newId] = {
+        id: newId,
+        name: newName,
+        cells: {},
+        selectedCell: "A1",
+        selectionRange: { start: "A1", end: "A1" },
+      };
+      state.sheetOrder.push(newId);
+      state.activeSheetId = newId;
+    },
+    deleteSheet: (state, action) => {
+      const sheetId = action.payload;
+      if (state.sheetOrder.length <= 1) return; // Don't delete last sheet
+
+      const index = state.sheetOrder.indexOf(sheetId);
+      state.sheetOrder = state.sheetOrder.filter(id => id !== sheetId);
+      delete state.sheets[sheetId];
+
+      if (state.activeSheetId === sheetId) {
+        state.activeSheetId = state.sheetOrder[Math.max(0, index - 1)];
+      }
+    },
+    renameSheet: (state, action) => {
+      const { sheetId, name } = action.payload;
+      if (state.sheets[sheetId]) {
+        state.sheets[sheetId].name = name;
+      }
     },
   },
 });
@@ -209,12 +278,16 @@ export const {
   changeFontColor,
   changeBgColor,
   clearFormatting,
+  setWorkbookName,
+  setActiveSheet,
+  addSheet,
+  deleteSheet,
+  renameSheet,
 } = cellsSlice.actions;
 
-// Helper functions for the slice (internal)
+// Helper functions (internal - now accept 'sheet' object)
 
 function extractParents(formula) {
-  // Matches A1, B12, AA100 etc.
   const matches = formula.match(/[A-Z]+\d+/g);
   return matches ? [...new Set(matches)] : [];
 }
@@ -235,50 +308,48 @@ function evaluateFormula(formula, cells) {
   }
 }
 
-function updateChildren(state, parentId) {
-  const children = state.cells[parentId]?.children;
+function updateChildren(sheet, parentId) {
+  const children = sheet.cells[parentId]?.children;
   if (!children) return;
 
   children.forEach(childId => {
-    const childCell = state.cells[childId];
+    const childCell = sheet.cells[childId];
     if (childCell && childCell.formula) {
-      const newValue = evaluateFormula(childCell.formula, state.cells);
-      state.cells[childId].value = newValue;
-      updateChildren(state, childId);
+      const newValue = evaluateFormula(childCell.formula, sheet.cells);
+      sheet.cells[childId].value = newValue;
+      updateChildren(sheet, childId);
     }
   });
 }
 
-function removeFormula(state, id) {
-  const cell = state.cells[id];
+function removeFormula(sheet, id) {
+  const cell = sheet.cells[id];
   if (!cell || !cell.parent) return;
 
   cell.parent.forEach(parentId => {
-    const parent = state.cells[parentId];
+    const parent = sheet.cells[parentId];
     if (parent && parent.children) {
       parent.children = parent.children.filter(childId => childId !== id);
     }
   });
 
-  state.cells[id].parent = [];
-  state.cells[id].formula = "";
+  sheet.cells[id].parent = [];
+  sheet.cells[id].formula = "";
 }
 
-function isCyclePresent(state, cellId, parents) {
+function isCyclePresent(sheet, cellId, parents) {
   for (let parentId of parents) {
     if (parentId === cellId) return true;
-    // Check if cellId is already an ancestor of parentId (i.e. parentId is reachable from cellId)
-    if (isReachable(state, cellId, parentId)) return true;
+    if (isReachable(sheet, cellId, parentId)) return true;
   }
   return false;
 }
 
-function isReachable(state, sourceId, targetId) {
-  // Can we reach targetId from sourceId using children links?
-  const children = state.cells[sourceId]?.children || [];
+function isReachable(sheet, sourceId, targetId) {
+  const children = sheet.cells[sourceId]?.children || [];
   for (let childId of children) {
     if (childId === targetId) return true;
-    if (isReachable(state, childId, targetId)) return true;
+    if (isReachable(sheet, childId, targetId)) return true;
   }
   return false;
 }

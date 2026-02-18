@@ -195,9 +195,13 @@ function VirtualGridContainer() {
 
 const Cell = React.memo(({ id }) => {
   const dispatch = useDispatch();
-  const data = useSelector((state) => state.sheet?.cells?.[id]);
+  const activeSheetId = useSelector((state) => state.sheet?.activeSheetId);
+  const data = useSelector((state) => state.sheet?.sheets?.[activeSheetId]?.cells?.[id]);
   const isInRange = useSelector((state) => {
-    const { selectionRange, selectedCell } = state.sheet;
+    const activeSheet = state.sheet?.sheets?.[activeSheetId];
+    if (!activeSheet) return false;
+
+    const { selectionRange, selectedCell } = activeSheet;
     if (!selectionRange.start || !selectionRange.end)
       return id === selectedCell;
 
