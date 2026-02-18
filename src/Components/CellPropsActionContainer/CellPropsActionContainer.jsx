@@ -1,4 +1,6 @@
+import React, { useState, useEffect, useCallback } from "react";
 import styles from "./CellPropsActionContainer.module.css";
+
 import { FaBold } from "react-icons/fa";
 import { FaAlignLeft } from "react-icons/fa";
 import { FaAlignRight } from "react-icons/fa";
@@ -6,6 +8,8 @@ import { FaAlignCenter } from "react-icons/fa6";
 import { FaCopy } from "react-icons/fa";
 import { FaCut } from "react-icons/fa";
 import { FaPaste } from "react-icons/fa";
+import { GrClearOption } from "react-icons/gr";
+
 import { Input, MenuItem, Select } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -16,8 +20,10 @@ import {
   setFontSize,
   changeFontColor,
   changeBgColor,
+  clearFormatting,
 } from "../REDUX/Features/CellsSlice";
 import { FaItalic } from "react-icons/fa";
+import { debounce } from "../../utils/debounce";
 
 const sizeValue = 28;
 function CellPropsActionContainer() {
@@ -44,36 +50,65 @@ function CellPropsActionContainer() {
     };
   }
 
+  const [localFontColor, setLocalFontColor] = useState(selectedCell.fontColor || "#000000");
+  const [localBgColor, setLocalBgColor] = useState(selectedCell.bgColor || "#ffffff");
+
+  useEffect(() => {
+    setLocalFontColor(selectedCell.fontColor || "#000000");
+    setLocalBgColor(selectedCell.bgColor || "#ffffff");
+  }, [selectedCellId, selectedCell.fontColor, selectedCell.bgColor]);
+
+  const debouncedDispatchFontColor = useCallback(
+    debounce((color) => {
+      dispatch(changeFontColor({ fontColor: color }));
+    }, 300),
+    [dispatch]
+  );
+
+  const debouncedDispatchBgColor = useCallback(
+    debounce((color) => {
+      dispatch(changeBgColor({ bgColor: color }));
+    }, 300),
+    [dispatch]
+  );
+
+  function HandleClearFormatting(e) {
+    e.preventDefault();
+    dispatch(clearFormatting());
+  }
+
   function HandleBold(e) {
     e.preventDefault();
-    dispatch(toggleBold({ id: selectedCellId }));
+    dispatch(toggleBold());
   }
   function HandleItalic(e) {
     e.preventDefault();
-    dispatch(toggleItalic({ id: selectedCellId }));
+    dispatch(toggleItalic());
   }
   function HandleAlign(e, val) {
     e.preventDefault();
-    dispatch(switchAlignment({ id: selectedCellId, val: val }));
+    dispatch(switchAlignment({ val: val }));
   }
   function handleFontFamilyChange(e) {
     const fontFamily = e.target.value;
-    dispatch(setFontFamily({ id: selectedCellId, fontFamily }));
+    dispatch(setFontFamily({ fontFamily }));
   }
 
   function handleFontSizeChange(e) {
     const fontSize = e.target.value;
-    dispatch(setFontSize({ id: selectedCellId, fontSize }));
+    dispatch(setFontSize({ fontSize }));
   }
 
   function handleFontColorChange(e) {
     const fontColor = e.target.value;
-    dispatch(changeFontColor({ id: selectedCellId, fontColor }));
+    setLocalFontColor(fontColor);
+    debouncedDispatchFontColor(fontColor);
   }
 
   function handleBgColorChange(e) {
     const bgColor = e.target.value;
-    dispatch(changeBgColor({ id: selectedCellId, bgColor }));
+    setLocalBgColor(bgColor);
+    debouncedDispatchBgColor(bgColor);
   }
   const align = selectedCell?.align ?? "left";
 
@@ -121,6 +156,14 @@ function CellPropsActionContainer() {
           <MenuItem value={"1.9rem"}>19</MenuItem>
           <MenuItem value={"2.0rem"}>20</MenuItem>
         </Select>
+        <GrClearOption
+          size={sizeValue}
+          className={styles.action}
+          onClick={HandleClearFormatting}
+          onMouseDown={(e) => {
+            e.preventDefault();
+          }}
+        />
         <FaBold
           size={sizeValue}
           className={selectedCell.isBold ? styles.actionActive : styles.action}
@@ -177,7 +220,7 @@ function CellPropsActionContainer() {
           <input
             id="fontColor"
             type="color"
-            value={selectedCell.fontColor || "#000000"}
+            value={localFontColor}
             onChange={handleFontColorChange}
             className={styles.colorInput}
           />
@@ -189,7 +232,7 @@ function CellPropsActionContainer() {
           <input
             id="bgColor"
             type="color"
-            value={selectedCell.bgColor || "#ffffff"}
+            value={localBgColor}
             onChange={handleBgColorChange}
             className={styles.colorInput}
           />

@@ -3,7 +3,14 @@ import React from "react";
 import styles from "./VirtualGridContainer.module.css";
 import { encodeColumn } from "../../utils/columnUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { addValue, updateSelected } from "../REDUX/Features/CellsSlice";
+import {
+  addValue,
+  updateSelected,
+  selectStart,
+  selectEnd,
+  setIsSelecting,
+} from "../REDUX/Features/CellsSlice";
+import { parseCellId, decodeColumn } from "../../utils/columnUtils";
 
 const ROW_COUNT = 1000; //depends on user created
 const COL_COUNT = 1000; //depends on user created
@@ -20,6 +27,7 @@ const range = (start, end) => {
 
 function VirtualGridContainer() {
   const viewportRef = React.useRef(null);
+  const dispatch = useDispatch();
 
   const [viewport, setViewport] = React.useState({
     width: 0,
@@ -53,6 +61,15 @@ function VirtualGridContainer() {
       scrollLeft: el.scrollLeft,
     }));
   };
+
+  const handleGlobalMouseUp = () => {
+    dispatch(setIsSelecting(false));
+  };
+
+  React.useEffect(() => {
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, []);
 
   const { width, height, scrollTop, scrollLeft } = viewport;
 
@@ -179,9 +196,45 @@ function VirtualGridContainer() {
 const Cell = React.memo(({ id }) => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.sheet?.cells?.[id]);
+  const isInRange = useSelector((state) => {
+    const { selectionRange, selectedCell } = state.sheet;
+    if (!selectionRange.start || !selectionRange.end)
+      return id === selectedCell;
+
+    const cellInfo = parseCellId(id);
+    const startInfo = parseCellId(selectionRange.start);
+    const endInfo = parseCellId(selectionRange.end);
+
+    if (!cellInfo || !startInfo || !endInfo) return false;
+
+    const col = decodeColumn(cellInfo.colLabel);
+    const row = cellInfo.rowNum;
+
+    const startCol = decodeColumn(startInfo.colLabel);
+    const startRow = startInfo.rowNum;
+    const endCol = decodeColumn(endInfo.colLabel);
+    const endRow = endInfo.rowNum;
+
+    const minCol = Math.min(startCol, endCol);
+    const maxCol = Math.max(startCol, endCol);
+    const minRow = Math.min(startRow, endRow);
+    const maxRow = Math.max(startRow, endRow);
+
+    return col >= minCol && col <= maxCol && row >= minRow && row <= maxRow;
+  });
 
   const handleChange = (e) => {
     dispatch(addValue({ id, value: e.target.value }));
+  };
+
+  const handleMouseDown = (e) => {
+    // If it's a right click, don't start selection
+    if (e.button !== 0) return;
+    dispatch(selectStart({ id }));
+  };
+
+  const handleMouseEnter = () => {
+    dispatch(selectEnd({ id }));
   };
 
   const handleFocus = () => {
@@ -193,10 +246,11 @@ const Cell = React.memo(({ id }) => {
       data-id={id}
       autoFocus={id === "0-A"}
       onFocus={handleFocus}
-      onClick={handleFocus}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
       value={data?.value || ""}
       onChange={handleChange}
-      className={styles.dataCell}
+      className={`${styles.dataCell} ${isInRange ? styles.selectedCell : ""}`}
       style={{
         fontWeight: data?.isBold ? "bolder" : "normal",
         fontStyle: data?.isItalic ? "italic" : "normal",

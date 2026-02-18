@@ -1,7 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { parseCellId, decodeColumn, encodeColumn } from "./../../../utils/columnUtils";
 
 const initialState = {
   selectedCell: "",
+  selectionRange: { start: null, end: null },
+  isSelecting: false,
   cells: {
     A1: {
       value: "10",
@@ -13,6 +16,40 @@ const initialState = {
     },
   },
 };
+
+// Internal helper for range formatting
+const applyToRange = (state, callback) => {
+  const { start, end } = state.selectionRange;
+  if (!start) {
+    if (state.selectedCell) {
+      callback(state.selectedCell);
+    }
+    return;
+  }
+
+  const startInfo = parseCellId(start);
+  const endInfo = parseCellId(end || start);
+
+  if (!startInfo || !endInfo) return;
+
+  const startCol = decodeColumn(startInfo.colLabel);
+  const endCol = decodeColumn(endInfo.colLabel);
+  const startRow = startInfo.rowNum;
+  const endRow = endInfo.rowNum;
+
+  const minCol = Math.min(startCol, endCol);
+  const maxCol = Math.max(startCol, endCol);
+  const minRow = Math.min(startRow, endRow);
+  const maxRow = Math.max(startRow, endRow);
+
+  for (let r = minRow; r <= maxRow; r++) {
+    for (let c = minCol; c <= maxCol; c++) {
+      const id = `${encodeColumn(c)}${r}`;
+      callback(id);
+    }
+  }
+};
+
 export const cellsSlice = createSlice({
   name: "sheet",
   initialState,
@@ -73,64 +110,86 @@ export const cellsSlice = createSlice({
     },
     updateSelected: (state, action) => {
       state.selectedCell = action.payload.id;
+      state.selectionRange = { start: action.payload.id, end: action.payload.id };
     },
-    toggleBold: (state, action) => {
-      const { id } = action.payload;
-      // console.log("toggle id : " + id);
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
-      }
-      state.cells[id].isBold = state.cells[id]?.isBold ? false : true;
+    selectStart: (state, action) => {
+      state.selectedCell = action.payload.id;
+      state.selectionRange = { start: action.payload.id, end: action.payload.id };
+      state.isSelecting = true;
     },
-    toggleItalic: (state, action) => {
-      const { id } = action.payload;
-      // console.log("toggle id : " + id);
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
+    selectEnd: (state, action) => {
+      if (state.isSelecting) {
+        state.selectionRange.end = action.payload.id;
       }
-      state.cells[id].isItalic = state.cells[id]?.isItalic ? false : true;
+    },
+    setIsSelecting: (state, action) => {
+      state.isSelecting = action.payload;
+    },
+    toggleBold: (state) => {
+      const targetId = state.selectedCell;
+      if (!targetId) return;
+      
+      const shouldBeBold = !state.cells[targetId]?.isBold;
+      
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].isBold = shouldBeBold;
+      });
+    },
+    toggleItalic: (state) => {
+      const targetId = state.selectedCell;
+      if (!targetId) return;
+
+      const shouldBeItalic = !state.cells[targetId]?.isItalic;
+
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].isItalic = shouldBeItalic;
+      });
     },
     switchAlignment: (state, action) => {
-      const { id, val } = action.payload;
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
-      }
-      state.cells[id].align = val;
+      const { val } = action.payload;
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].align = val;
+      });
     },
     setFontFamily: (state, action) => {
-      const { id, fontFamily } = action.payload;
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
-      }
-      state.cells[id].fontFamily = fontFamily;
+      const { fontFamily } = action.payload;
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].fontFamily = fontFamily;
+      });
     },
     setFontSize: (state, action) => {
-      const { id, fontSize } = action.payload;
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
-      }
-      state.cells[id].fontSize = fontSize;
+      const { fontSize } = action.payload;
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].fontSize = fontSize;
+      });
     },
     changeFontColor: (state, action) => {
-      const { id, fontColor } = action.payload;
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
-      }
-      state.cells[id].fontColor = fontColor;
+      const { fontColor } = action.payload;
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].fontColor = fontColor;
+      });
     },
     changeBgColor: (state, action) => {
-      const { id, bgColor } = action.payload;
-      if (id == null) return;
-      if (state.cells[id] == null) {
-        state.cells[id] = {};
-      }
-      state.cells[id].bgColor = bgColor;
+      const { bgColor } = action.payload;
+      applyToRange(state, (id) => {
+        if (!state.cells[id]) state.cells[id] = {};
+        state.cells[id].bgColor = bgColor;
+      });
+    },
+    clearFormatting: (state) => {
+      applyToRange(state, (id) => {
+        if (state.cells[id]) {
+          const { value, formula, parent, children } = state.cells[id];
+          // Keep data but reset styles
+          state.cells[id] = { value, formula, parent, children };
+        }
+      });
     },
   },
 });
@@ -138,6 +197,9 @@ export const cellsSlice = createSlice({
 export const {
   addValue,
   updateSelected,
+  selectStart,
+  selectEnd,
+  setIsSelecting,
   toggleBold,
   toggleItalic,
   switchAlignment,
@@ -146,6 +208,7 @@ export const {
   applyFormula,
   changeFontColor,
   changeBgColor,
+  clearFormatting,
 } = cellsSlice.actions;
 
 // Helper functions for the slice (internal)

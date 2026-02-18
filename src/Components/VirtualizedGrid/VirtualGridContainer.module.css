@@ -132,3 +132,10 @@
 .columnHeaderInner {
   height: 32px; /* same as .corner height */
 }
+
+.selectedCell {
+  outline: 2px solid #217346;
+  outline-offset: -2px;
+  background-color: rgba(33, 115, 70, 0.1) !important;
+  z-index: 10;
+}

@@ -37,3 +37,12 @@ export function decodeColumn(label) {
 
   return result - 1;
 }
+
+export function parseCellId(id) {
+  const match = id.match(/^([A-Z]+)(\d+)$/);
+  if (!match) return null;
+  return {
+    colLabel: match[1],
+    rowNum: parseInt(match[2], 10),
+  };
+}
