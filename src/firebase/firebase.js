@@ -7,12 +7,12 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth"; // ✅ REQUIRED
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-   apiKey: "AIzaSyBsJOWq_tR5dPpEGfsqRqjVIT1GdEssQ-g",
-  authDomain: "excel-learning-demo.firebaseapp.com",
-  projectId: "excel-learning-demo",
-  storageBucket: "excel-learning-demo.firebasestorage.app",
-  messagingSenderId: "215101485456",
-  appId: "1:215101485456:web:8a68e1863e491941018315"
+   apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
 
 // Initialize Firebase
