@@ -14,6 +14,8 @@ import {
   switchAlignment,
   setFontFamily,
   setFontSize,
+  changeFontColor,
+  changeBgColor,
 } from "../REDUX/Features/CellsSlice";
 import { FaItalic } from "react-icons/fa";
 
@@ -62,6 +64,16 @@ function CellPropsActionContainer() {
   function handleFontSizeChange(e) {
     const fontSize = e.target.value;
     dispatch(setFontSize({ id: selectedCellId, fontSize }));
+  }
+
+  function handleFontColorChange(e) {
+    const fontColor = e.target.value;
+    dispatch(changeFontColor({ id: selectedCellId, fontColor }));
+  }
+
+  function handleBgColorChange(e) {
+    const bgColor = e.target.value;
+    dispatch(changeBgColor({ id: selectedCellId, bgColor }));
   }
   const align = selectedCell?.align ?? "left";
 
@@ -158,6 +170,30 @@ function CellPropsActionContainer() {
             e.preventDefault();
           }}
         />
+        <div className={styles.colorPickerContainer}>
+          <label htmlFor="fontColor" className={styles.colorLabel}>
+            A
+          </label>
+          <input
+            id="fontColor"
+            type="color"
+            value={selectedCell.fontColor || "#000000"}
+            onChange={handleFontColorChange}
+            className={styles.colorInput}
+          />
+        </div>
+        <div className={styles.colorPickerContainer}>
+          <label htmlFor="bgColor" className={styles.colorLabel}>
+            BG
+          </label>
+          <input
+            id="bgColor"
+            type="color"
+            value={selectedCell.bgColor || "#ffffff"}
+            onChange={handleBgColorChange}
+            className={styles.colorInput}
+          />
+        </div>
       </div>
     </>
   );

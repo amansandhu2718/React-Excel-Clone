@@ -30,3 +30,30 @@
     padding-left: 0.5rem;
   }
 }
+
+.colorPickerContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.colorPickerContainer:hover {
+  background-color: rgb(199, 199, 199);
+}
+
+.colorInput {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: none;
+}
+
+.colorLabel {
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}

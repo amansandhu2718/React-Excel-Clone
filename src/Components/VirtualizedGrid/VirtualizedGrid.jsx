@@ -132,7 +132,7 @@ function VirtualGridContainer() {
                   width: "100%",
                 }}
               >
-                {rowIndex}
+                {rowIndex + 1}
               </div>
             ))}
           </div>
@@ -152,7 +152,7 @@ function VirtualGridContainer() {
           >
             {range(firstRow, lastRow).map((rowIndex) =>
               range(firstCol, lastCol).map((colIndex) => {
-                const id = `${rowIndex}-${encodeColumn(colIndex)}`;
+                const id = `${encodeColumn(colIndex)}${rowIndex + 1}`;
                 return (
                   <div
                     key={id}
@@ -203,6 +203,8 @@ const Cell = React.memo(({ id }) => {
         textAlign: data?.align || "left",
         fontSize: data?.fontSize || "1rem",
         fontFamily: data?.fontFamily || "roboto",
+        color: data?.fontColor || "#000000",
+        backgroundColor: data?.bgColor || "#ffffff",
       }}
     />
   );
